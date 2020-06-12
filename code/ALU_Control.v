@@ -29,6 +29,7 @@ module ALU_Control(rst_n, I_in, ALUOp, alu_ctrl_out);
                         default: alu_ctrl_out = 0;
                     endcase
 
+                2'b11: alu_ctrl_out = 4'b0010;
                 default: alu_ctrl_out = 0;
             endcase
         end

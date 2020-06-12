@@ -39,15 +39,27 @@ module CHIP(clk,
     //---------------------------------------//
 
     // Todo: other wire/reg
-    wire branch, memRead, memtoReg, memWrite, aluSrc_imm;  // for control,   memRead currently not used
+    // control signal
+    wire branch, memRead, memWrite, aluSrc2_imm;  // for control,   memRead currently not used
     wire [1:0] aluOp; // check aluOp order, I[6] or I[4] first
-    wire alu_equal;  // decide to branch or not (output of ALU)
-    wire jump;
+    wire [1:0] regWrite_src;
+    
+    // jump signal and addr
+    wire jal;  // jal_family
+    wire jalr;  // jump_signal[1]
+    wire jump;  // jump_signal[0]
     wire [31:0] jump_addr;
     wire [31:0] imm_addr; // generated immediate
-    wire [31:0] alu_in_2; // second input for alu, first one is rs1_data
+    wire [31:0] auipc_rdata;
+
+    // for allu
+    wire alu_equal;  // decide to branch or not (output of ALU)
+    wire [31:0] alu_in_2; // second input for alu
     wire [31:0] alu_out;
     wire [3:0] alu_ctrl_out; //output of ALU Control
+
+    // for auipc
+    wire imm_no_shift;
 
     //---------------------------------------//
     // Do not modify this part!!!            //
@@ -69,13 +81,10 @@ module CHIP(clk,
     assign rs2 = mem_rdata_I[24:20];
     assign rd = mem_rdata_I[11:7];
     
-    assign jump = alu_equal & branch;
-    assign jump_addr = imm_addr << 1;
+    assign jump = (alu_equal & branch) | jal;
+    assign jump_addr = imm_no_shift ? imm_addr : imm_addr << 1;
 
-    assign alu_in_2 = aluSrc_imm ? imm_addr : rs2_data;
-
-    // register write
-    assign rd_data = memtoReg ? mem_rdata_D : alu_out;
+    assign alu_in_2 = aluSrc2_imm ? imm_addr : rs2_data;
 
     // output
     assign mem_wen_D = memWrite;
@@ -87,26 +96,31 @@ module CHIP(clk,
         .rst_n(rst_n),
         .pc_in(PC), 
         .pc_out(PC_nxt), 
-        .jump(jump), 
-        .jump_addr(jump_addr)
+        .pc_out_adder(auipc_rdata),
+        .jump_signal({jalr, jump}), 
+        .jump_addr(jump_addr),
+        .read_data(alu_out)
     );
 
     Control control(
         .rst_n(rst_n),
-        .Con_in(mem_rdata_I[6:4]), 
+        .Con_in(mem_rdata_I[6:0]), 
         .Branch(branch), 
         .MemRead(memRead), 
-        .MemtoReg(memtoReg), 
+        .RegWrite_src(regWrite_src), 
         .ALUOp(aluOp), 
         .MemWrite(memWrite), 
-        .ALUSrc(aluSrc_imm), 
-        .RegWrite(regWrite)
+        .ALUSrc(aluSrc2_imm), 
+        .RegWrite(regWrite),
+        .Jal(jal),
+        .Jalr(jalr)
     );
 
     Imm_Gen imm_gen(
         .rst_n(rst_n),
         .I_in(mem_rdata_I), 
-        .imm_out(imm_addr)
+        .imm_out(imm_addr),
+        .no_shift(imm_no_shift)
     );
 
     ALU_Control alu_ctrl(
@@ -123,6 +137,16 @@ module CHIP(clk,
         .alu_ctrl(alu_ctrl_out),
         .alu_out(alu_out), 
         .zero(alu_equal)
+    );
+
+    RegWrite_Mux reg_mux(
+        .rst_n(rst_n), 
+        .ctrl(regWrite_src), 
+        .pc(PC),
+        .auipc_rdata(auipc_rdata), 
+        .read_data(mem_rdata_D), 
+        .alu_result(alu_out), 
+        .regW_data(rd_data)
     );
 
     always @(posedge clk or negedge rst_n) begin

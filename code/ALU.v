@@ -17,7 +17,7 @@ module ALU(rst_n, alu_in_1, alu_in_2, alu_ctrl, alu_out, zero);
             alu_out_r = 0;
         end
         else begin 
-            zero = alu_ctrl[2] & ~alu_out_r;
+            zero = alu_ctrl[2] & (alu_out_r == 32'b0);
             case(alu_ctrl)
                 4'b0000: alu_out_r = alu_in_1 & alu_in_2;
                 4'b0001: alu_out_r = alu_in_1 | alu_in_2;
