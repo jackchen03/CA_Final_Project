@@ -48,12 +48,13 @@ module CHIP(clk,
     wire jal;  // jal_family
     wire jalr;  // jump_signal[1]
     wire jump;  // jump_signal[0]
+    wire auipc;
     wire [31:0] jump_addr;
     wire [31:0] imm_addr; // generated immediate
-    wire [31:0] auipc_rdata;
 
     // for allu
     wire alu_equal;  // decide to branch or not (output of ALU)
+    wire [31:0] alu_in_1; 
     wire [31:0] alu_in_2; // second input for alu
     wire [31:0] alu_out;
     wire [3:0] alu_ctrl_out; //output of ALU Control
@@ -84,6 +85,7 @@ module CHIP(clk,
     assign jump = (alu_equal & branch) | jal;
     assign jump_addr = imm_no_shift ? imm_addr : imm_addr << 1;
 
+    assign alu_in_1 = auipc ? PC : rs1_data;
     assign alu_in_2 = aluSrc2_imm ? imm_addr : rs2_data;
 
     // output
@@ -96,7 +98,6 @@ module CHIP(clk,
         .rst_n(rst_n),
         .pc_in(PC), 
         .pc_out(PC_nxt), 
-        .pc_out_adder(auipc_rdata),
         .jump_signal({jalr, jump}), 
         .jump_addr(jump_addr),
         .read_data(alu_out)
@@ -113,7 +114,8 @@ module CHIP(clk,
         .ALUSrc(aluSrc2_imm), 
         .RegWrite(regWrite),
         .Jal(jal),
-        .Jalr(jalr)
+        .Jalr(jalr),
+        .Auipc(auipc)
     );
 
     Imm_Gen imm_gen(
@@ -132,7 +134,7 @@ module CHIP(clk,
 
     ALU alu(
         .rst_n(rst_n),
-        .alu_in_1(rs1_data), 
+        .alu_in_1(alu_in_1), 
         .alu_in_2(alu_in_2),
         .alu_ctrl(alu_ctrl_out),
         .alu_out(alu_out), 
@@ -143,7 +145,6 @@ module CHIP(clk,
         .rst_n(rst_n), 
         .ctrl(regWrite_src), 
         .pc(PC),
-        .auipc_rdata(auipc_rdata), 
         .read_data(mem_rdata_D), 
         .alu_result(alu_out), 
         .regW_data(rd_data)
