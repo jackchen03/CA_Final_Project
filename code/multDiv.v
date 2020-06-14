@@ -1,4 +1,4 @@
-`timescale 1 ns/10 ps
+// `timescale 1 ns/10 ps
 module multDiv(
     clk,
     rst_n,

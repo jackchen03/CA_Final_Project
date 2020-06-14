@@ -1,4 +1,4 @@
-`timescale 1 ns/10 ps
+// `timescale 1 ns/10 ps
 module RegWrite_Mux(rst_n, ctrl, pc, read_data, alu_result, regW_data, mul_ready, mul_out);
 	input rst_n;
     input  [1:0]  ctrl;
