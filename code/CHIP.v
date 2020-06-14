@@ -59,8 +59,11 @@ module CHIP(clk,
     wire [31:0] alu_out;
     wire [3:0] alu_ctrl_out; //output of ALU Control
 
-    // for auipc
-    wire imm_no_shift;
+
+    // for mul
+    wire mul;
+    wire mul_ready;
+    wire [31:0] mul_out;
 
     //---------------------------------------//
     // Do not modify this part!!!            //
@@ -83,9 +86,9 @@ module CHIP(clk,
     assign rd = mem_rdata_I[11:7];
     
     assign jump = (alu_equal & branch) | jal;
-    assign jump_addr = imm_no_shift ? imm_addr : imm_addr << 1;
+    assign jump_addr = imm_addr << 1;
 
-    assign alu_in_1 = auipc ? PC : rs1_data;
+    assign alu_in_1 = auipc ? PC : rs1_data;  // if auipc, use PC as alu_in_1; otherwise, use rs1_data
     assign alu_in_2 = aluSrc2_imm ? imm_addr : rs2_data;
 
     // output
@@ -98,6 +101,8 @@ module CHIP(clk,
         .rst_n(rst_n),
         .pc_in(PC), 
         .pc_out(PC_nxt), 
+        .mul(mul),
+        .mul_ready(mul_ready),
         .jump_signal({jalr, jump}), 
         .jump_addr(jump_addr),
         .read_data(alu_out)
@@ -105,7 +110,7 @@ module CHIP(clk,
 
     Control control(
         .rst_n(rst_n),
-        .Con_in(mem_rdata_I[6:0]), 
+        .Con_in({mem_rdata_I[25] ,mem_rdata_I[6:0]}), 
         .Branch(branch), 
         .MemRead(memRead), 
         .RegWrite_src(regWrite_src), 
@@ -115,14 +120,14 @@ module CHIP(clk,
         .RegWrite(regWrite),
         .Jal(jal),
         .Jalr(jalr),
-        .Auipc(auipc)
+        .Auipc(auipc),
+        .Mul(mul)
     );
 
     Imm_Gen imm_gen(
         .rst_n(rst_n),
         .I_in(mem_rdata_I), 
-        .imm_out(imm_addr),
-        .no_shift(imm_no_shift)
+        .imm_out(imm_addr)
     );
 
     ALU_Control alu_ctrl(
@@ -147,7 +152,20 @@ module CHIP(clk,
         .pc(PC),
         .read_data(mem_rdata_D), 
         .alu_result(alu_out), 
-        .regW_data(rd_data)
+        .regW_data(rd_data),
+        .mul_ready(mul_ready),
+        .mul_out(mul_out)
+    );
+
+    multDiv multdiv(
+        .clk(clk),
+        .rst_n(rst_n),
+        .valid(mul),
+        .ready(mul_ready),
+        .mode(1'b0),
+        .in_A(rs1_data),
+        .in_B(rs2_data),
+        .out(mul_out)
     );
 
     always @(posedge clk or negedge rst_n) begin

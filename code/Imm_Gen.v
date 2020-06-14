@@ -1,8 +1,7 @@
-module Imm_Gen(rst_n, I_in, imm_out, no_shift);
+module Imm_Gen(rst_n, I_in, imm_out);
 	input rst_n;
 	input [31:0] I_in;
 	output reg [31:0] imm_out;
-	output reg no_shift;
 
 	always @(*) begin
 		if (!rst_n) begin
@@ -27,7 +26,6 @@ module Imm_Gen(rst_n, I_in, imm_out, no_shift);
 				default : imm_out = 0;
 			endcase
 
-			no_shift = (I_in[6:2] == 5'b00101) ? 1'b1 : 1'b0;  // auipc, no shift
 		end
 	end
 
