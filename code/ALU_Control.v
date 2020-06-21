@@ -17,8 +17,9 @@ module ALU_Control(rst_n, I_in, ALUOp, alu_ctrl_out);
                         3'b000: alu_ctrl_out = (I_in[30] & I_in[5]) ? 4'b0110 : 4'b0010;
                         3'b111: alu_ctrl_out = 4'b0000;
                         3'b110: alu_ctrl_out = 4'b0001;
-                        3'b010: alu_ctrl_out = 4'b1000;
-                        
+                        3'b010: alu_ctrl_out = 4'b1000; // slti
+                        3'b001: alu_ctrl_out = 4'b1001; // slli
+                        3'b101: alu_ctrl_out = 4'b1010; // srai
                         default: alu_ctrl_out = 0;
                     endcase
                     

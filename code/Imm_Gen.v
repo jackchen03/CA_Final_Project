@@ -11,7 +11,7 @@ module Imm_Gen(rst_n, I_in, imm_out);
 		else begin 
 			case (I_in[6:5])
 				2'b00: begin
-					imm_out = I_in[2] ? (I_in & {20'b1, 12'b0}) : { {20{I_in[31]}}, I_in[31:20]};  // 1: auipc, 0: load
+					imm_out = I_in[2] ? (I_in & {20'b1, 12'b0}) : { {20{I_in[31]}}, I_in[31:20]};  // 1: auipc, 0: load/slli/srai
 				end
 					
 				2'b01: imm_out = { {20{I_in[31]}}, I_in[31:25], I_in[11:7]};
