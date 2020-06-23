@@ -34,8 +34,8 @@ module ALU(rst_n, alu_in_1, alu_in_2, alu_ctrl, alu_out, zero);
                         alu_out_r = 0;
                     end
                 end
-                4'b1001: alu_out_r = alu_in_1 << alu_in_2[5:0];
-                4'b1010: alu_out_r = signed'(alu_in_1) >>> alu_in_2[5:0];
+                4'b1001: alu_out_r = alu_in_1 << alu_in_2[4:0];
+                4'b1010: alu_out_r = alu_in_1 >>> alu_in_2[4:0];
 
                 default: alu_out_r = 0;
             endcase
