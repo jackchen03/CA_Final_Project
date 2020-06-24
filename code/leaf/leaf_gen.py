@@ -4,10 +4,10 @@ def leaf(a,b,c,d):
 
 if __name__ == '__main__':
     # Modify your test pattern here
-    a = 1
-    b = 9
-    c = 2
-    d = 2
+    a = 10
+    b = 90
+    c = 20
+    d = 20
         
     with open('leaf_data.txt', 'w') as f_data:
         f_data.write('{:0>8x}\n'.format(a))
